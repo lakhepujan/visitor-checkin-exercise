@@ -4,7 +4,7 @@ module Api
 
     def index
       page = (params[:page] || 1).to_i
-      visitors = Visitor.where(checked_out_at: nil)
+      visitors = Visitor.where(checked_out_at: nil, active: true)
                         .order(:id)
                         .offset((page - 1) * PER_PAGE)
                         .limit(PER_PAGE)
@@ -24,7 +24,7 @@ module Api
 
     def check_out
       visitor = Visitor.find(params[:id])
-      visitor.update!(checked_out_at: Time.current)
+        visitor.update!(checked_out_at: Time.current)
       render json: serialize(visitor)
     end
 
