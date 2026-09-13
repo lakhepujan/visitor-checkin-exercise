@@ -193,7 +193,7 @@ The registration form or API should reject the submission and identify the missi
 The visitor is created with company name and purpose having null value 
 
 
-## Defect 9: No loading, empty, or error state in the visitor list
+## Defect 8: No loading, empty, or error state in the visitor list
 
 **Summary:** `VisitorList.jsx` does not display loading indicators, empty state messages, or error messages during data fetch.  
 **Type:** Usability  
