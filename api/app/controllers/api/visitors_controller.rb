@@ -24,7 +24,7 @@ module Api
 
     def check_out
       visitor = Visitor.find(params[:id])
-        visitor.update!(checked_out_at: Time.current)
+       visitor.update!(checked_out_at: Time.current)
       render json: serialize(visitor)
     end
 
@@ -36,7 +36,7 @@ module Api
 
     def search
       q = params[:q].to_s.strip
-      visitors = Visitor.where("full_name LIKE ?", "%#{q}%")
+      visitors = Visitor.where("full_name LIKE ?", "%#{q}%").where(active: true)
                         .order(:full_name)
                         .limit(10)
       render json: visitors.map { |v| { id: v.id, full_name: v.full_name, company_name: v.company_name, host_id: v.host_id } }
