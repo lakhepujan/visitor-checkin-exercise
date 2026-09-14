@@ -24,7 +24,9 @@ module Api
 
     def check_out
       visitor = Visitor.find(params[:id])
-       visitor.update!(checked_out_at: Time.current)
+        if visitor.checked_out_at.nil?
+         visitor.update!(checked_out_at: Time.current)
+        end
       render json: serialize(visitor)
     end
 
