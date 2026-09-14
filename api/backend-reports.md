@@ -18,7 +18,9 @@ visitors = Visitor.where(checked_out_at: nil, active: true)
 
 ## Why I selected Defect 2
 
-I selected **Defect 2: Deactivated visitors returned in search results** because:
+**D2: Deactivated visitors returned in search results** 
+
+I selected because:
 
 - It is a **functional correctness and security issue**: the search endpoint is used to find visitors for repeat check-ins, and deactivated visitors must not be selectable for this purpose.
 - It can cause real product impact: unauthorized or terminated individuals could be re-admitted, violating security policies and causing confusion for staff.
@@ -30,4 +32,24 @@ Updated `GET /api/visitors/search` to exclude inactive visitors:
 
 ```ruby
 visitors = Visitor.where("full_name ILIKE ?", "%#{query}%").where(active: true)
+```
+
+## Why I selected Defect 3
+
+**D3: Re-checking out a visitor overwrites the original checked_out_at timestamp** 
+
+I selected because:
+
+- It is a **data integrity issue**: the `checked_out_at` field should represent the exact moment a visitor checked out and should not be modified once set.
+- It can cause real product impact: overwriting timestamps leads to  incorrect duration calculations, and compliance/reporting issues.
+- The fix is small and safe (conditional check before update), and can be verified clearly with a request spec.
+
+## Fix summary
+
+Updated `PATCH /api/visitors/:id/check_out` to prevent overwriting an existing checkout timestamp:
+
+```ruby
+if visitor.checked_out_at.nil?
+  visitor.update!(checked_out_at: Time.current)
+end
 ```
