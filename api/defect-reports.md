@@ -60,11 +60,11 @@ This is a data integrity issue because `checked_out_at` should represent the mom
    - `POST /api/visitors`
 3. Note the returned visitor `id` (example: `81`).
 4. Check out the visitor the first time:
-   - `PATCH /api/visitors/1/check_out`
+   - `PATCH /api/visitors/81/check_out`
 5. Confirm response contains a non-null `checked_out_at` timestamp.
 6. Wait a few seconds.
 7. Check out the same visitor again:
-   - `PATCH /api/visitors/1/check_out`
+   - `PATCH /api/visitors/81/check_out`
 8. Observe the `checked_out_at` timestamp again .
 
 ### Expected Result
@@ -103,7 +103,7 @@ This can lead to confusion during manual testing and also makes frontend develop
 ### Actual Result
 - Successful responses return only the raw serialized object with no message.
 
-## Defect 5: Creating a visitor accepts missing or null required fields
+## Defect 5: Reuired full_name field accepts null values
 
 **Summary:** `POST /api/visitors` allows creating a visitor even when required fields are missing or null.  
 **Type:** Functional / Data Validation  
@@ -174,26 +174,7 @@ Newly created visitors should appear at the top of the list by default (commonly
 ### Actual Result
 The newly created visitor appears at the end of the list response (or on later pages), requiring additional navigation/pagination to view the most recently added record.
 
-## Defect 7: Company Name and Purpose fields are not enforced as required
-
-**Summary:** Visitor can be registered without `company_name` and `purpose` - backend has no presence validation.  
-**Type:** Functional / Data Validation
-
-### Description
-In the application, registration collects `full_name`, `company_name`, `host` employee, and `purpose_of_visit`. The frontend form only marks `full_name` and `host` as required and the backend has no validations. As a result, `POST /api/visitors` accepts `null` / missing `company_name` and `purpose`, creating incomplete visitor records. This contradicts the requirement that these fields are collected at registration.
-
-### Steps to Reproduce :
-Submit the registration form without filling in the company name and purpose.
-Observe the created record 
-
-### Expected Result  
-The registration form or API should reject the submission and identify the missing field
-
-### Actual Result 
-The visitor is created with company name and purpose having null value 
-
-
-## Defect 8: No loading, empty, or error state in the visitor list
+## Defect 7: No loading, empty, or error state in the visitor list
 
 **Summary:** `VisitorList.jsx` does not display loading indicators, empty state messages, or error messages during data fetch.  
 **Type:** Usability  
