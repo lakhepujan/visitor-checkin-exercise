@@ -1,7 +1,11 @@
 ## Defect 1: Deactivated user still appears in Active Visitor list
 **Summary:** Deactivated user is still shown in the “Active Visitors” list.  
-**Type:** Functional / Data Integrity  
-**Description:** After a user is deactivated, they continue to appear in the Active Visitor list. This creates inconsistency between user status and what the application displays. This causes deactivated visitor records to remain visible in the active visitors list.
+
+**Type:** Functional / Data Integrity 
+
+**Description** 
+
+After a user is deactivated, they continue to appear in the Active Visitor list. This creates inconsistency between user status and what the application displays. This causes deactivated visitor records to remain visible in the active visitors list.
 
 
 **Steps to Reproduce (Backend / Postman):**
@@ -18,12 +22,18 @@
 7. Check whether visitor with ID `1` is still present and/or still treated as active in the response.
 
 
-**Expected Result:** The deactivated user should not appear in the Active Visitors list and be excluded from “active” counts.  
-**Actual Result:** The deactivated user still appears in the Active Visitors list as if they are active.
+**Expected Result**
+
+The deactivated user should not appear in the Active Visitors list and be excluded from “active” counts.  
+
+**Actual Result** 
+
+The deactivated user still appears in the Active Visitors list as if they are active.
 
 ## Defect 2: Deactivated visitors returned in search results
 
 **Summary:** Deactivated visitors are still returned in `GET /api/visitors/search`.  
+
 **Type:** Functional  
 
 ### Description
@@ -47,6 +57,7 @@ The deactivated visitor (ID `1`) is still returned by `GET /api/visitors/search`
 ## Defect 3: Re-checking out a visitor overwrites the original checked_out_at timestamp
 
 **Summary:** Calling `checkout` API endpoint multiple times overwrites the existing `checked_out_at` value.  
+
 **Type:** Functional / Data Integrity  
 
 ### Description
@@ -76,6 +87,7 @@ On the second call, the API updates `checked_out_at` again, producing a new time
 ## Defect 4: API responses lack clear success/error messages 
 
 **Summary:** API does not provide clear success and error messages, causing confusion during verification.  
+
 **Type:** Usability / API Design  
 
 ### Description
@@ -106,6 +118,7 @@ This can lead to confusion during manual testing and also makes frontend develop
 ## Defect 5: Reuired full_name field accepts null values
 
 **Summary:** `POST /api/visitors` allows creating a visitor even when required fields are missing or null.  
+
 **Type:** Functional / Data Validation  
 
 ### Description
@@ -140,6 +153,7 @@ The API should reject invalid input and return an appropriate error response, fo
 ## Defect 6: Newly added visitors appear at the end of the visitors list
 
 **Summary:** New visitors created via `POST /api/visitors` appear at the end of `GET /api/visitors` results instead of appearing first.  
+
 **Type:** Usability / Functional  
 
 ### Description
@@ -177,6 +191,7 @@ The newly created visitor appears at the end of the list response (or on later p
 ## Defect 7: No loading, empty, or error state in the visitor list
 
 **Summary:** `VisitorList.jsx` does not display loading indicators, empty state messages, or error messages during data fetch.  
+
 **Type:** Usability  
 
 ### Description
@@ -205,3 +220,35 @@ The `VisitorList.jsx` component should display:
 
 ### Actual Result
 The component renders an empty `<tbody>` in all three cases (loading, empty, error), providing no feedback to the user about the application state.
+
+## Defect 8: N+1 query problem in visitor list endpoint
+
+**Summary:** `GET /api/visitors` triggers N+1 database queries when fetching visitor records with associated host data.  
+
+**Type:** Performance  
+
+**Description** 
+
+The visitors index endpoint does not preload associated `host` records. When `visitor.host` is accessed for each visitor, Rails makes a separate query for each host. For 20 visitors, this results in 21 queries instead of 2, causing unnecessary database load and slower response times as the number of visitors grows.
+
+**Steps to Reproduce (Backend / Postman):**
+
+1. Start the Rails API server.
+2. Open a terminal and monitor SQL queries in Rails output log:
+3. Send a request to fetch the visitors list:
+   - `GET /api/visitors`
+4. Observe the Rails output and count the number of SQL queries executed.
+5. Note the query patternlog :
+   - First query: `SELECT * FROM visitors WHERE active = true AND checked_out_at IS NULL ORDER BY id LIMIT 20`
+   - Followed by 20 separate queries: `SELECT * FROM hosts WHERE id = ?` (one for each visitor)
+6. Count the total number of queries (should be 21 for a page of 20 visitors).
+
+
+**Expected Result** 
+
+The endpoint should use eager loading (e.g., `.includes(:host)`) to fetch all associated hosts in a single query. Expected query pattern: 1 query for visitors + 1 query for all associated hosts = 2 queries total.
+
+
+**Actual Result** 
+
+Without `.includes(:host)`, the endpoint executes 1 query for visitors + N queries for hosts (where N = number of visitors returned) = 21 queries for 20 visitors (N+1 problem). This results in slower response times and increased database load.
