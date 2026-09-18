@@ -139,6 +139,7 @@ The API allows a visitor record to be created even if required visitor informati
        "host_id": 1
      }
    ```
+
 3. Observe the response status and body.
 4. Verify by fetching visitors:
    - `GET /api/visitors`
@@ -166,7 +167,7 @@ The API accepts the request and returns 201 Created, storing a visitor record wi
 **Description**
 After creating a new visitor, fetching the visitors list (`GET /api/visitors`) returns records ordered such that the newly created visitor appears at the end of the list. This makes it harder for admins to confirm the newly added visitor and can require pagination/navigation to later pages to find the latest entry.
 
-**Steps to Reproduce** (Backend / Postman)
+**Steps to Reproduce**
 1. Start the Rails API server.
 2. Fetch the current visitors list:
    - `GET /api/visitors?page=1`
@@ -174,7 +175,7 @@ After creating a new visitor, fetching the visitors list (`GET /api/visitors`) r
 3. Create a new visitor:
    - `POST /api/visitors`
    - Send a valid request body (example):
-     ```json
+      ```json
          {
             "full_name": "New Visitor",
             "company_name": "Test Company",
