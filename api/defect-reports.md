@@ -129,15 +129,15 @@ The API allows a visitor record to be created even if required visitor informati
 2. Send a create request with missing required fields (example: omit `full_name`), or set them as `null`:
    - `POST /api/visitors`
    - Body example:
-     ```json
+   ```json
      {
        "full_name": null,
        "company_name": null,
         "purpose": "Backend internship assessment",
        "host_id": 1
      }
-     ```
- 3. Observe the response status and body.
+   ```
+3. Observe the response status and body.
 4. Verify by fetching visitors:
    - `GET /api/visitors`
    - Confirm the created visitor appears with missing/null values.
@@ -148,7 +148,7 @@ The API should reject invalid input and return an appropriate error response, fo
 - A clear error payload indicating which fields are required, e.g.:
   ```json
   { "errors": { "full_name": ["can't be blank"] } }
-
+  ```
 
 ## Defect 6: Newly added visitors appear at the end of the visitors list
 
@@ -208,9 +208,9 @@ As a result, users cannot distinguish between:
 This creates a poor user experience and makes debugging/testing harder.
 
 ### Steps to Reproduce
-1 Run the frontend application without running the backend server.
-2 The list area remains blank without any error identification.
-3 Slow the API fetch process and observe the table for any loading message.
+- Run the frontend application without running the backend server.
+- The list area remains blank without any error identification.
+- Slow the API fetch process and observe the table for any loading message.
 
 ### Expected Result
 The `VisitorList.jsx` component should display:
