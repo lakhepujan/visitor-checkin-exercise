@@ -10,6 +10,7 @@ After a visitor is deactivated, they continue to appear in the Active Visitor li
 
 
 **Steps to Reproduce**
+
 1. Start the Rails API server.
 2. Fetch existing visitors:
    - `GET /api/visitors`
@@ -42,6 +43,7 @@ The deactivated visitor still appears in the Active Visitors list as if they are
 The specification states that deactivated visitors must not be selectable for repeat visits. However, after deactivating a visitor, the deactivated visitor is still returned by the search endpoint `GET /api/visitors/search`. This allows deactivated visitors to remain searchable and therefore selectable for repeat visits, which violates the requirement.
 
 **Steps to Reproduce**
+
 1. Ensure the Rails API server is running.
 2. Deactivate an existing visitor (example: visitor with ID `1`) by sending:  
    - `PATCH /api/visitors/1/deactivate`
@@ -51,9 +53,11 @@ The specification states that deactivated visitors must not be selectable for re
 5. Check the response list for the deactivated visitor (ID `1`).
 
 **Expected Result**
+
 Deactivated visitors (e.g., visitor with ID `1` with `"active": false`) should **NOT** be returned by `GET /api/visitors/search`, since deactivated visitors must not be selectable for repeat visits.
 
 **Actual Result**
+
 The deactivated visitor (ID `1`) is still returned by `GET /api/visitors/search`.
 
 ## Defect 3: Re-checking out a visitor overwrites the original checked_out_at timestamp
@@ -63,11 +67,11 @@ The deactivated visitor (ID `1`) is still returned by `GET /api/visitors/search`
 **Type:** Functional / Data Integrity  
 
 **Description**
-When a visitor is checked out for the first time, the API correctly stores the current timestamp in `checked_out_at`. However, if the same check_out endpoint is called again for the same visitor, the API updates `checked_out_at` again with a new timestamp. This overwrites the original check_out time and causes loss of historical accuracy.
 
-This is a data integrity issue because `checked_out_at` should represent the moment the visitor actually checked out, and should not change once set.
+When a visitor is checked out for the first time, the API correctly stores the current timestamp in `checked_out_at`. However, if the same check_out endpoint is called again for the same visitor, the API updates `checked_out_at` again with a new timestamp. This overwrites the original check_out time and causes loss of historical accuracy.This is a data integrity issue because `checked_out_at` should represent the moment the visitor actually checked out, and should not change once set.
 
 **Steps to Reproduce** 
+
 1. Start the Rails API server.
 2. Create a new visitor (or use an existing one that is currently not checked out):
    - `POST /api/visitors`
@@ -81,9 +85,11 @@ This is a data integrity issue because `checked_out_at` should represent the mom
 8. Observe the `checked_out_at` timestamp again .
 
 **Expected Result**
+
 If the visitor is already checked out (`checked_out_at` is not null), calling `PATCH /api/visitors/:id/check_out` again should **not** overwrite the original timestamp. The API should keep the initial `checked_out_at` value.
 
 **Actual Result**
+
 On the second call, the API updates `checked_out_at` again, producing a new timestamp , overwriting the original value.
 
 ## Defect 4: API responses lack clear success/error messages 
@@ -93,11 +99,11 @@ On the second call, the API updates `checked_out_at` again, producing a new time
 **Type:** Usability / API Design  
 
 **Description**
-Several API endpoints return only raw data objects on success and provide empty array for not found results. Because there is no explicit success message,error message, it becomes difficult for consumers (Postman testing or frontend UI) to confirm what happened (e.g., created successfully vs partially failed) and to display meaningful feedback to visitors.
 
-This can lead to confusion during manual testing and also makes frontend development harder because the UI must guess how to interpret different responses.
+Several API endpoints return only raw data objects on success and provide empty array for not found results. Because there is no explicit success message,error message, it becomes difficult for consumers (Postman testing or frontend UI) to confirm what happened (e.g., created successfully vs partially failed) and to display meaningful feedback to visitors.This can lead to confusion during manual testing and also makes frontend development harder because the UI must guess how to interpret different responses.
 
 **Steps to Reproduce**
+
 1. Start the Rails API server.
 2. Trigger a successful action (example):
    - `POST /api/visitors` with a valid payload.
@@ -107,6 +113,7 @@ This can lead to confusion during manual testing and also makes frontend develop
 5. Observe the error response body.
 
 **Expected Result**
+
 - On success, API should return a consistent structure with confirmation, for example:
   - a `message` field like `"Visitor created successfully"`.
 - On error, API should return:
@@ -115,6 +122,7 @@ This can lead to confusion during manual testing and also makes frontend develop
   - a clear message such as `"Validation failed"` / `"Visitor could not be created"`,”Visitor already checked out”.
 
 **Actual Result**
+
 - Successful responses return only the raw serialized object with no message.
 
 ## Defect 5: Required full_name and Host field accepts null values
@@ -124,9 +132,11 @@ This can lead to confusion during manual testing and also makes frontend develop
 **Type:** Functional / Data Validation  
 
 **Description**
+
 The API allows a visitor record to be created even if required visitor information is missing or provided as `null`/empty. This can lead to incomplete or invalid visitor records in the database and can break flows that depend on these fields (search, check-in/check_out).
 
 **Steps to Reproduce**
+
 1. Start the Rails API server.
 2. Send a create request with missing required fields (example: omit `full_name`), or set them as `null`:
    - `POST /api/visitors`
@@ -146,6 +156,7 @@ The API allows a visitor record to be created even if required visitor informati
    - Confirm the created visitor appears with missing/null values.
 
 **Expected Result**
+
 The API should reject invalid input and return an appropriate error response, for example:
 - HTTP `422 Unprocessable Entity`
 - A clear error payload indicating which fields are required, e.g.:
@@ -165,9 +176,11 @@ The API accepts the request and returns 201 Created, storing a visitor record wi
 **Type:** Usability / Functional  
 
 **Description**
+
 After creating a new visitor, fetching the visitors list (`GET /api/visitors`) returns records ordered such that the newly created visitor appears at the end of the list. This makes it harder for admins to confirm the newly added visitor and can require pagination/navigation to later pages to find the latest entry.
 
 **Steps to Reproduce**
+
 1. Start the Rails API server.
 2. Fetch the current visitors list:
    - `GET /api/visitors?page=1`
@@ -192,9 +205,11 @@ After creating a new visitor, fetching the visitors list (`GET /api/visitors`) r
    - `GET /api/visitors?page=2`
 
 **Expected Result**
+
 Newly created visitors should appear at the top of the list by default (commonly ordered by most recent first, e.g., `created_at DESC` or `id DESC`), so the visitor can immediately see and verify the new entry without navigating to later pages.
 
 **Actual Result**
+
 The newly created visitor appears at the end of the list response (or on later pages), requiring additional navigation/pagination to view the most recently added record.
 
 ## Defect 7: No loading, empty, or error state in the visitor list
@@ -204,6 +219,7 @@ The newly created visitor appears at the end of the list response (or on later p
 **Type:** Usability  
 
 **Description**
+
 The `VisitorList.jsx` component renders an empty `<tbody>` when the visitor list is empty or when the fetch request fails. There is no:
 - **Loading indicator** while data is being fetched (important for slower network/API),
 - **Empty state message** when there are no visitors to display,
@@ -217,17 +233,20 @@ As a result, visitors cannot distinguish between:
 This creates a poor visitor experience and makes debugging/testing harder.
 
 **Steps to Reproduce**
+
 1. Run the frontend application without running the backend server.
 2. The list area remains blank without any error identification.
 3. Slow the API fetch process and observe the table for any loading message.
 
 **Expected Result**
+
 The `VisitorList.jsx` component should display:
 - A **loading indicator** while the fetch is in progress.
 - An **empty state message** (e.g., "No visitors found") when the list is successfully fetched but empty.
 - An **error message** (e.g., "Failed to load visitors. Please try again.") when the fetch request fails.
 
 **Actual Result**
+
 The component renders an empty `<tbody>` in all three cases (loading, empty, error), providing no feedback to the user about the application state.
 
 ## Defect 8: N+1 query problem in visitor list endpoint
