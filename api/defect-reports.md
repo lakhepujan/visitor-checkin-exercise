@@ -171,9 +171,10 @@ After creating a new visitor, fetching the visitors list (`GET /api/visitors`) r
      {
        "full_name": "New Visitor",
        "company_name": "Test Company",
-       “purpose: : “Added new visitor”
+       "purpose":  "Added new visitor",
        "host_id": 1
      }
+     
      ```
 4. Copy the `id` of the newly created visitor from the response.
 5. Fetch the visitors list again:
