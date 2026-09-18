@@ -2,7 +2,7 @@
 
 ## Why I selected Defect 1
 
-**D1: Deactivated user still appears in Active Visitor list** 
+**D1: Deactivated visitors still appear in Active Visitor list** 
 
 I selected  this because:
 
@@ -33,7 +33,7 @@ I selected because:
 Updated `GET /api/visitors/search` to exclude inactive visitors:
 
 ```ruby
-visitors = Visitor.where("full_name ILIKE ?", "%#{query}%").where(active: true)
+visitors = Visitor.where("full_name ILIKE ?", "%#{q}%").where(active: true)
 ```
 
 ## Why I selected Defect 3
@@ -62,7 +62,7 @@ end
 I selected because:
 
 - It is a **performance issue**: the endpoint executes N+1 database queries (21 queries for 20 visitors) instead of 2 queries, causing unnecessary database load and slower response times.
-- It can cause real product impact: degrade performance for users viewing the visitor list, increased server load, and poor scalability as the number of visitors grows.
+- It can cause real product impact: degrade performance for visitors viewing the visitor list, increased server load, and poor scalability as the number of visitors grows.
 - The fix is small and safe (adding `.includes(:host)`), and can be verified clearly with query log analysis and performance measurements.
 
 ## Fix summary
@@ -87,11 +87,11 @@ visitors = Visitor.where(active: true, checked_out_at: nil)
 - It requires changes to the API response structure, which would alter the existing API contract and could break existing frontend consumers.
 - The fix requires product confirmation: response formatting is a design decision, not a technical correction.
 
-**D5: Creating a visitor accepts missing or null required fields**
+**D5: Required full_name and Host field accepts null values**
 
 **Why I did not fix this defect:**
 
-- It is a **data validation issue:** the API allows a visitor to be created with **full_name** set to null, even though full_name is marked as required.
+- It is a **data validation issue:** the API allows a visitor to be created with **full_name** and **host_id**set to null, even though full_name is marked as required.
 - Fixing it would add backend validation and change the API's behavior for invalid requests.
 
 
@@ -99,7 +99,7 @@ visitors = Visitor.where(active: true, checked_out_at: nil)
 
 **Why I did not fix this defect:**
 
-- It is a **usability/UX issue, not a functional correctness issue**: the endpoint works correctly, but the sort order may not match user expectations.
+- It is a **usability/UX issue, not a functional correctness issue**: the endpoint works correctly, but the sort order may not match visitor expectations.
 - The specification does not explicitly define the expected sort order (newest-first vs. oldest-first), making this more of a **product preference** than a clear defect.
 - Changing the default sort order could affect existing consumers that rely on
   the current ordering, so this would require clarification before changing it.
