@@ -130,3 +130,44 @@
         end
      end
 end
+
+RSpec.describe "Visitors API", type: :request do
+  describe "GET /api/visitors" do
+    it "does not make an N+1 query for hosts" do
+      host = Host.create!(name: "Test Host")
+
+      20.times do |i|
+        Visitor.create!(
+          full_name: "Visitor #{i}",
+          company_name: "Company #{i}",
+          host: host,
+          purpose: "Meeting",
+          active: true,
+          checked_out_at: nil
+        )
+      end
+
+      queries = []
+
+      subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
+        payload = args.last
+
+        unless payload[:name].in?(["SCHEMA", "CACHE"])
+          queries << payload[:sql]
+        end
+      end
+
+      get "/api/visitors"
+
+      ActiveSupport::Notifications.unsubscribe(subscriber)
+
+      expect(response).to have_http_status(:ok)
+
+      host_queries = queries.count do |sql|
+        sql.match?(/FROM ["`]hosts["`]/i)
+      end
+
+      expect(host_queries).to be <= 1
+    end
+  end
+end
